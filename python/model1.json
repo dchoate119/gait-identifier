@@ -1,0 +1,55 @@
+{
+  "axis": "ay",
+  "fs": 50,
+  "window_s": 3.0,
+  "feature": "max |a - mean| over the window",
+  "classes": {
+    "still": {
+      "mean": 0.020482388059701487,
+      "sd": 0.01458300757853745
+    },
+    "bike": {
+      "mean": 1.1316452252252254,
+      "sd": 0.09249635212206608
+    },
+    "walk": {
+      "mean": 1.767292965879265,
+      "sd": 0.31138315105916115
+    },
+    "run": {
+      "mean": 3.540401538461538,
+      "sd": 0.544029154066198
+    }
+  },
+  "boundaries": [
+    {
+      "at": 0.105,
+      "below": "still",
+      "above": "walk"
+    },
+    {
+      "at": 0.813,
+      "below": "walk",
+      "above": "bike"
+    },
+    {
+      "at": 1.326,
+      "below": "bike",
+      "above": "walk"
+    },
+    {
+      "at": 2.464,
+      "below": "walk",
+      "above": "run"
+    }
+  ],
+  "cv": {
+    "accuracy": 0.953,
+    "recall": {
+      "still": 1.0,
+      "bike": 0.973,
+      "walk": 0.913,
+      "run": 1.0
+    }
+  }
+}
