@@ -82,7 +82,9 @@ ui.on_message('prediction', p => {
   const card = $(`model-${p.model}`);
   if (!card) return;
   card.querySelector('.gait').textContent = p.gait;
-  card.querySelector('.detail').textContent = p.peak != null ? `peak ${p.peak.toFixed(2)} g` : '';
+  card.querySelector('.detail').textContent = p.peak != null
+    ? `peak ${p.peak.toFixed(2)} g`
+    : `rhythm ${p.features.rhythm.toFixed(2)} · ${p.features.dom_hz.toFixed(2)} Hz`;
   card.querySelector('.probs').innerHTML = CLASSES.map(c => {
     const pct = Math.round((p.probs[c] ?? 0) * 100);
     return `<div class="prob"><span>${c}</span><div class="bar"><div class="fill" style="width:${pct}%"></div></div><span class="pct">${pct}%</span></div>`;

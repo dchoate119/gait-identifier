@@ -1,8 +1,8 @@
-"""Gait data logger + live model 1.
+"""Gait data logger + live models 1 and 2.
 
 Pulls 50 Hz IMU samples from the sketch every 200 ms, records them to CSV
-between Start and Stop, classifies the gait with model 1, and streams samples,
-status and predictions to the web page (http://<board-ip>:7000).
+between Start and Stop, classifies the gait with both models, and streams
+samples, status and predictions to the web page (http://<board-ip>:7000).
 """
 
 import threading
@@ -13,6 +13,7 @@ from arduino.app_utils import App, Bridge
 
 import recorder
 from model1 import Model1
+from model2 import Model2
 from recorder import Recorder
 
 POLL_S = 0.2
@@ -21,7 +22,7 @@ MAX_BATCH = 50   # must match the sketch
 
 ui = WebUI()
 rec = Recorder()
-model1 = Model1()
+models = [Model1(), Model2()]
 lock = threading.Lock()   # page messages arrive on the web server's thread
 
 # Rate stats, refreshed every RATE_WINDOW_S
@@ -100,9 +101,10 @@ def loop():
 
     samples = [[float(x) for x in line.split(",")] for line in lines]
     ui.send_message("samples", {"samples": samples})
-    prediction = model1.add(samples)
-    if prediction:
-        ui.send_message("prediction", prediction)
+    for model in models:
+        prediction = model.add(samples)
+        if prediction:
+            ui.send_message("prediction", prediction)
     ui.send_message("status", status())
     time.sleep(POLL_S)
 

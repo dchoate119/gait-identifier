@@ -1,6 +1,6 @@
 """Model 1 live: peak of one axis over a sliding window -> most likely gait.
 
-Uses the per-class mean/spread from model1.json (trained in laptop/model1.ipynb).
+Uses the per-class mean/spread from model1.json (trained in laptop/model1/model1.ipynb).
 Every half window it classifies the last full window.
 """
 
