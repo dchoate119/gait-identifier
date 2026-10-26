@@ -64,6 +64,34 @@ button:disabled { opacity: 0.5; cursor: default; }
 .pill.on { background: #16a34a22; color: var(--y); }
 .pill.off { background: #dc262622; color: var(--rec); }
 
+.prediction {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.prediction .caption { font-size: 0.8rem; color: var(--muted); }
+.prediction .gait { font-size: 2.6rem; text-transform: capitalize; }
+.prediction .probs { width: 100%; display: grid; gap: 4px; margin-top: 6px; }
+.prob { display: grid; grid-template-columns: 3.5rem 1fr 3rem; align-items: center; gap: 8px; font-size: 0.85rem; }
+.prob .bar { height: 8px; border-radius: 4px; background: var(--border); overflow: hidden; }
+.prob .fill { height: 100%; background: var(--accent); }
+.prob .pct { text-align: right; font-variant-numeric: tabular-nums; }
+
+.pills { display: flex; gap: 6px; }
+.pill.rec { background: #dc262622; color: var(--rec); }
+
+.tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tab { display: flex; flex-direction: column; gap: 16px; }
+.tab[hidden] { display: none; }
+
+.cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 520px) { .cards { grid-template-columns: 1fr; } }
+
 .labels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 
 .record {

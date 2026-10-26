@@ -1,8 +1,12 @@
-// Gait Logger page: label + Start/Stop, live status, 5 s plot, recordings list.
-// Python sends "samples" ([t_ms, ax, ay, az, gx, gy, gz] rows), "status" and
-// "recordings"; this page sends "start" {label} and "stop".
+// Gait Logger page, two tabs:
+//   Record:   label + Start/Stop, live status, 5 s plot, recordings list
+//   Evaluate: live prediction cards for model 1 and model 2, 5 s plot
+// Python sends "samples" ([t_ms, ax, ay, az, gx, gy, gz] rows), "status",
+// "recordings" and "prediction" {model, gait, peak, probs}; this page sends
+// "start" {label} and "stop".
 
 const WINDOW = 250;   // samples on the plot (5 s at 50 Hz)
+const CLASSES = ['still', 'bike', 'walk', 'run'];
 
 const ui = new WebUI();
 const $ = id => document.getElementById(id);
@@ -19,6 +23,20 @@ ui.on_disconnect(() => setConn(false));
 function setConn(on) {
   $('conn').textContent = on ? 'connected' : 'disconnected';
   $('conn').className = 'pill ' + (on ? 'on' : 'off');
+}
+
+// --- tabs ---
+// One plot card, moved into the active tab's slot
+document.querySelectorAll('.tabs button').forEach(b => {
+  b.addEventListener('click', () => showTab(b.dataset.tab));
+});
+
+function showTab(name) {
+  document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('selected', b.dataset.tab === name));
+  document.querySelectorAll('.tab').forEach(t => (t.hidden = t.id !== `tab-${name}`));
+  $(`tab-${name}`).querySelector('.plot-slot').appendChild($('plot-card'));
+  try { localStorage.setItem('tab', name); } catch {}
+  draw();
 }
 
 // --- controls ---
@@ -48,6 +66,7 @@ function setView(gyro) {
 // --- messages from the board ---
 ui.on_message('status', s => {
   recording = s.recording;
+  $('rec-badge').hidden = !recording;
   $('record').textContent = recording ? 'Stop' : 'Start';
   $('record').classList.toggle('recording', recording);
   document.querySelectorAll('#labels button').forEach(b => (b.disabled = recording));
@@ -57,6 +76,17 @@ ui.on_message('status', s => {
   $('hz').textContent = s.hz ? `${s.hz} Hz` : '– Hz';
   $('gap').textContent = s.max_gap ? `${s.max_gap} ms` : '– ms';
   $('dropped').textContent = s.dropped;
+});
+
+ui.on_message('prediction', p => {
+  const card = $(`model-${p.model}`);
+  if (!card) return;
+  card.querySelector('.gait').textContent = p.gait;
+  card.querySelector('.detail').textContent = p.peak != null ? `peak ${p.peak.toFixed(2)} g` : '';
+  card.querySelector('.probs').innerHTML = CLASSES.map(c => {
+    const pct = Math.round((p.probs[c] ?? 0) * 100);
+    return `<div class="prob"><span>${c}</span><div class="bar"><div class="fill" style="width:${pct}%"></div></div><span class="pct">${pct}%</span></div>`;
+  }).join('');
 });
 
 ui.on_message('samples', m => {
@@ -121,3 +151,8 @@ function draw() {
 }
 
 window.addEventListener('resize', draw);
+
+// Reopen the last tab
+let savedTab = 'record';
+try { savedTab = localStorage.getItem('tab') || 'record'; } catch {}
+showTab(savedTab === 'evaluate' ? 'evaluate' : 'record');

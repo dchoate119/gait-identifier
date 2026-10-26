@@ -10,28 +10,64 @@
     <main>
       <header>
         <h1>Gait Logger</h1>
-        <span id="conn" class="pill off">disconnected</span>
+        <div class="pills">
+          <span id="rec-badge" class="pill rec" hidden>● recording</span>
+          <span id="conn" class="pill off">disconnected</span>
+        </div>
       </header>
 
-      <section class="labels" id="labels">
-        <button data-label="still">Still</button>
-        <button data-label="walk" class="selected">Walk</button>
-        <button data-label="run">Run</button>
-        <button data-label="bike">Bike</button>
-      </section>
+      <nav class="tabs">
+        <button data-tab="record" class="selected">Record</button>
+        <button data-tab="evaluate">Evaluate</button>
+      </nav>
 
-      <button id="record" class="record">Start</button>
+      <div id="tab-record" class="tab">
+        <section class="labels" id="labels">
+          <button data-label="still">Still</button>
+          <button data-label="walk" class="selected">Walk</button>
+          <button data-label="run">Run</button>
+          <button data-label="bike">Bike</button>
+        </section>
 
-      <section class="status">
-        <div><span>File</span><b id="file">–</b></div>
-        <div><span>Time</span><b id="elapsed">0.0 s</b></div>
-        <div><span>Rows</span><b id="rows">0</b></div>
-        <div><span>Rate</span><b id="hz">– Hz</b></div>
-        <div><span>Max gap</span><b id="gap">– ms</b></div>
-        <div><span>Dropped</span><b id="dropped">0</b></div>
-      </section>
+        <button id="record" class="record">Start</button>
 
-      <section class="plot">
+        <section class="status">
+          <div><span>File</span><b id="file">–</b></div>
+          <div><span>Time</span><b id="elapsed">0.0 s</b></div>
+          <div><span>Rows</span><b id="rows">0</b></div>
+          <div><span>Rate</span><b id="hz">– Hz</b></div>
+          <div><span>Max gap</span><b id="gap">– ms</b></div>
+          <div><span>Dropped</span><b id="dropped">0</b></div>
+        </section>
+
+        <div class="plot-slot"></div>
+
+        <section>
+          <h2>Recordings</h2>
+          <ul id="recordings"><li class="empty">None yet</li></ul>
+        </section>
+      </div>
+
+      <div id="tab-evaluate" class="tab" hidden>
+        <section class="cards">
+          <div class="prediction" id="model-1">
+            <span class="caption">Model 1 (ay peak)</span>
+            <b class="gait">–</b>
+            <span class="caption detail">waiting for data</span>
+            <div class="probs"></div>
+          </div>
+          <div class="prediction" id="model-2">
+            <span class="caption">Model 2 (all IMU)</span>
+            <b class="gait">–</b>
+            <span class="caption detail">not trained yet</span>
+            <div class="probs"></div>
+          </div>
+        </section>
+
+        <div class="plot-slot"></div>
+      </div>
+
+      <section class="plot" id="plot-card">
         <div class="plot-head">
           <div class="legend">
             <span class="x">x</span><span class="y">y</span><span class="z">z</span>
@@ -42,11 +78,6 @@
           </div>
         </div>
         <canvas id="plot"></canvas>
-      </section>
-
-      <section>
-        <h2>Recordings</h2>
-        <ul id="recordings"><li class="empty">None yet</li></ul>
       </section>
     </main>
     <script src="libs/socket.io.min.js"></script>
