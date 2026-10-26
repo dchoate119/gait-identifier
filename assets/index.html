@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gait Logger</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Gait Logger</h1>
+        <span id="conn" class="pill off">disconnected</span>
+      </header>
+
+      <section class="labels" id="labels">
+        <button data-label="still">Still</button>
+        <button data-label="walk" class="selected">Walk</button>
+        <button data-label="run">Run</button>
+        <button data-label="bike">Bike</button>
+      </section>
+
+      <button id="record" class="record">Start</button>
+
+      <section class="status">
+        <div><span>File</span><b id="file">–</b></div>
+        <div><span>Time</span><b id="elapsed">0.0 s</b></div>
+        <div><span>Rows</span><b id="rows">0</b></div>
+        <div><span>Rate</span><b id="hz">– Hz</b></div>
+        <div><span>Max gap</span><b id="gap">– ms</b></div>
+        <div><span>Dropped</span><b id="dropped">0</b></div>
+      </section>
+
+      <section class="plot">
+        <div class="plot-head">
+          <div class="legend">
+            <span class="x">x</span><span class="y">y</span><span class="z">z</span>
+          </div>
+          <div class="toggle">
+            <button id="show-accel" class="selected">Accel (g)</button>
+            <button id="show-gyro">Gyro (deg/s)</button>
+          </div>
+        </div>
+        <canvas id="plot"></canvas>
+      </section>
+
+      <section>
+        <h2>Recordings</h2>
+        <ul id="recordings"><li class="empty">None yet</li></ul>
+      </section>
+    </main>
+    <script src="libs/socket.io.min.js"></script>
+    <script src="libs/arduino.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
