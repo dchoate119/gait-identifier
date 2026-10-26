@@ -43,4 +43,4 @@ class Model1:
         weights = {c: math.exp(v - top) for c, v in logs.items()}
         total = sum(weights.values())
         probs = {c: round(w / total, 3) for c, w in weights.items()}
-        return {"gait": max(probs, key=probs.get), "peak": round(peak, 2), "probs": probs}
+        return {"model": 1, "gait": max(probs, key=probs.get), "peak": round(peak, 2), "probs": probs}
