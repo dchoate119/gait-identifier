@@ -1,7 +1,9 @@
 // gait-identifier: MPU-6050 on the ankle (header SDA/SCL, address 0x68).
 //
-// Python calls imu_check() and imu_read() for raw samples
-// "ax,ay,az,gx,gy,gz" in g and deg/s (ranges: ±16 g, ±2000 deg/s, wide enough for running).
+// loop() samples at 50 Hz into a ring buffer. Python calls read_batch() to
+// collect everything since its last call, one "t_ms,ax,ay,az,gx,gy,gz" line
+// per sample, in g and deg/s (ranges: ±16 g, ±2000 deg/s, wide enough for running).
+// imu_check() and imu_read() remain for the hardware test.
 
 #include <Wire.h>
 #include "Arduino_RouterBridge.h"
@@ -17,7 +19,24 @@ const uint8_t RANGE_MAX = 0x18;     // ±16 g / ±2000 deg/s in the config regis
 const float ACCEL_LSB = 2048.0;     // counts per g at ±16 g
 const float GYRO_LSB = 16.4;        // counts per deg/s at ±2000 deg/s
 
+const unsigned long SAMPLE_MS = 20; // 50 Hz
+const int BUF_SIZE = 256;           // ~5 s of slack if Python falls behind
+const int MAX_BATCH = 50;           // samples per read_batch() reply
+
+struct Sample {
+    uint32_t t_ms;
+    int16_t v[6];                   // raw counts: ax, ay, az, gx, gy, gz
+};
+
+// Ring buffer: head is the next slot to write, count is how many are unread.
+// The oldest unread sample is count slots behind head.
+Sample buf[BUF_SIZE];
+int head = 0;
+int count = 0;
+uint32_t dropped = 0;               // samples overwritten before Python read them
+
 bool found = false;
+unsigned long next_sample_ms = 0;
 
 void write_reg(uint8_t reg, uint8_t val) {
     Wire.beginTransmission(ADDR);
@@ -60,6 +79,34 @@ String imu_read() {
     return s;
 }
 
+// Write a sample at head. If the buffer is full, this overwrites the oldest one.
+void push(const Sample &s) {
+    buf[head] = s;
+    head = (head + 1) % BUF_SIZE;
+    if (count < BUF_SIZE) count++;
+    else dropped++;
+}
+
+// Hand Python the oldest unread samples (up to MAX_BATCH) and mark them read.
+String read_batch() {
+    int n = min(count, MAX_BATCH);
+    int tail = (head - count + BUF_SIZE) % BUF_SIZE;
+    String s;
+    for (int k = 0; k < n; k++) {
+        const Sample &p = buf[(tail + k) % BUF_SIZE];
+        s += String(p.t_ms);
+        for (int i = 0; i < 3; i++) s += "," + String(p.v[i] / ACCEL_LSB, 3);
+        for (int i = 3; i < 6; i++) s += "," + String(p.v[i] / GYRO_LSB, 1);
+        s += "\n";
+    }
+    count -= n;
+    return s;
+}
+
+uint32_t imu_dropped() {
+    return dropped;
+}
+
 void setup() {
     Wire.begin();
     Wire.beginTransmission(ADDR);
@@ -73,7 +120,21 @@ void setup() {
     Bridge.begin();
     Bridge.provide_safe("imu_check", imu_check);
     Bridge.provide_safe("imu_read", imu_read);
+    // provide_safe runs these in the loop thread, so they never race push()
+    Bridge.provide_safe("read_batch", read_batch);
+    Bridge.provide_safe("imu_dropped", imu_dropped);
+    next_sample_ms = millis();
 }
 
 void loop() {
+    if (!found || millis() < next_sample_ms) return;
+    next_sample_ms += SAMPLE_MS;    // fixed schedule, so timing doesn't drift
+
+    int16_t raw[7];
+    read_raw(raw);
+    Sample s;
+    s.t_ms = millis();
+    for (int i = 0; i < 3; i++) s.v[i] = raw[i];
+    for (int i = 0; i < 3; i++) s.v[3 + i] = raw[4 + i];  // skip temperature
+    push(s);
 }
