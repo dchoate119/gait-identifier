@@ -19,7 +19,7 @@ class Model1:
         self.classes = cfg["classes"]                     # {name: {mean, sd}}
         n = int(cfg["window_s"] * cfg["fs"])
         self.window = deque(maxlen=n)
-        self.step = n // 2
+        self.step = 12   # predict every 0.24 s at 50 Hz
         self.new = 0
 
     def add(self, samples):
